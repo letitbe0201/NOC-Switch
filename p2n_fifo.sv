@@ -1,7 +1,7 @@
-module n2p_fifo (clk, rst, data_in, rd_en, wr_en, data_out, empty, full); 
+module p2n_fifo (clk, rst, data_in, rd_en, wr_en, data_out, empty, full); 
 
 parameter DATA_WIDTH = 9;
-parameter ADDR_WIDTH = 4;
+parameter ADDR_WIDTH = 8;
 parameter RAM_DEPTH = (1 << ADDR_WIDTH);
 
 input   logic                  clk      ; // Clock input
