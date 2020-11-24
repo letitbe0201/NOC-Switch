@@ -37,7 +37,13 @@ module ps (NOCI.TI t, NOCI.FO f);
 		NONE,
 		WR_CMD,
 		RD_CMD
-	} rcv_cmd; // Read/Write command
+	} rcv_cmd; // Read/Write Command
+	enum [1:0] {
+		NONE_RSP,
+		WR_RSP,
+		RD_RSP,
+		MG_RSP
+	} rcv_rsp; // Read/Write/Message Response
 	logic [7:0] cmd_Des; // Rd/Wr command DESTINATION
 	logic [9:0] cmd_cnt;
 	logic [9:0] cmd_cnt_fifo; 
@@ -146,18 +152,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 	assign p2n_fifo2_en_r = pfifo_grt[1] && (!p2n_fifo2_empty);
 	assign p2n_fifo3_en_r = pfifo_grt[2] && (!p2n_fifo3_empty);
 	assign p2n_fifo4_en_r = pfifo_grt[3] && (!p2n_fifo4_empty);
-/*	always_ff @ (posedge t.clk or posedge t.reset) begin
-		if (t.reset) begin
-			p2n_fifo1_en_r <= #1 0;
-		end
-		else begin
-			if (s2p_1.noc_from_dev_ctl!=1 && s2p_1.noc_from_dev_data!=0)
-				p2n_fifo1_en_r <= #1 1;
-			else
-				p2n_fifo1_en_r <= #1 0;
-		end
-	end
-*/
+
 	always_comb begin
 		case (pfifo_grt)
 			4'b0001: begin
@@ -192,45 +187,93 @@ module ps (NOCI.TI t, NOCI.FO f);
 		if (t.reset) begin
 			pfifo_req <= #1 0;
 			p2n_cnt <= #1 0;
+			rcv_rsp <= #1 NONE_RSP;
 		end
 		else begin
 			if (s2p_1.noc_from_dev_ctl && (s2p_1.noc_from_dev_data!=0)) begin
 				pfifo_req[0] <= #1 1;
 				case (s2p_1.noc_from_dev_data[2:0])
-//					3'b011:
-					3'b100: p2n_cnt <= #1 5;
-					3'b101: p2n_cnt <= #1 6;
+					3'b011: begin
+						rcv_rsp <= #1 RD_RSP;
+						p2n_cnt <= #1 3;
+					end
+					3'b100: begin
+						rcv_rsp <= #1 WR_RSP;
+						p2n_cnt <= #1 5;
+					end
+					3'b101: begin
+						rcv_rsp <= #1 MG_RSP;
+						p2n_cnt <= #1 6;
+					end
 				endcase
 			end
 			if (s2p_2.noc_from_dev_ctl && (s2p_2.noc_from_dev_data!=0)) begin
 				pfifo_req[1] <= #1 1;
 				case (s2p_2.noc_from_dev_data[2:0])
-//					3'b011:
-					3'b100: p2n_cnt <= #1 5;
-					3'b101: p2n_cnt <= #1 6;
+					3'b011: begin
+						rcv_rsp <= #1 RD_RSP;
+						p2n_cnt <= #1 3;
+					end
+					3'b100: begin
+						rcv_rsp <= #1 WR_RSP;
+						p2n_cnt <= #1 5;
+					end
+					3'b101: begin
+						rcv_rsp <= #1 MG_RSP;
+						p2n_cnt <= #1 6;
+					end
 				endcase
 			end
 			if (s2p_3.noc_from_dev_ctl && (s2p_3.noc_from_dev_data!=0)) begin
 				pfifo_req[2] <= #1 1;
 				case (s2p_3.noc_from_dev_data[2:0])
-//					3'b011:
-					3'b100: p2n_cnt <= #1 5;
-					3'b101: p2n_cnt <= #1 6;
+					3'b011: begin
+						rcv_rsp <= #1 RD_RSP;
+						p2n_cnt <= #1 3;
+					end
+					3'b100: begin
+						rcv_rsp <= #1 WR_RSP;
+						p2n_cnt <= #1 5;
+					end
+					3'b101: begin
+						rcv_rsp <= #1 MG_RSP;
+						p2n_cnt <= #1 6;
+					end
 				endcase
 			end
 			if (s2p_4.noc_from_dev_ctl && (s2p_4.noc_from_dev_data!=0)) begin
 				pfifo_req[3] <= #1 1;
 				case (s2p_4.noc_from_dev_data[2:0])
-//					3'b011:
-					3'b100: p2n_cnt <= #1 5;
-					3'b101: p2n_cnt <= #1 6;
+					3'b011: begin
+						rcv_rsp <= #1 RD_RSP;
+						p2n_cnt <= #1 3;
+					end
+					3'b100: begin
+						rcv_rsp <= #1 WR_RSP;
+						p2n_cnt <= #1 5;
+					end
+					3'b101: begin
+						rcv_rsp <= #1 MG_RSP;
+						p2n_cnt <= #1 6;
+					end
 				endcase
 			end
 			if (p2n_cnt > 1)
 				p2n_cnt <= #1 p2n_cnt - 1;
 			else if (p2n_cnt == 1) begin
-				p2n_cnt <= #1 0;
-				pfifo_req <= #1 0;
+				if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl)) begin
+					case (pfifo_grt)
+						4'b0001: p2n_cnt <= #1 s2p_1.noc_from_dev_data + 2;
+						4'b0010: p2n_cnt <= #1 s2p_2.noc_from_dev_data + 2;
+						4'b0100: p2n_cnt <= #1 s2p_3.noc_from_dev_data + 2;
+						4'b1000: p2n_cnt <= #1 s2p_4.noc_from_dev_data + 2;
+						default: $display("ERROR AT RESPONSE COMMAND COUNTING");
+					endcase
+				end
+				else begin
+					p2n_cnt <= #1 0;
+					pfifo_req <= #1 0;
+				end
 			end
 		end
 	end

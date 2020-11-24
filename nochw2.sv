@@ -84,6 +84,7 @@ module noc_intf(
 	logic wr_en;
 	logic fifo_empty;
 	logic rd_fifo;
+//	logic [3:0] wr_rcv; // Rise if a Write command received. Fall if the output is read
 
 	// WR (30-bit) [cmd:3 | rc:2 | did:8 | sid:8 | al:8 | 0]
 	// RD (30-bit) [cmd:3 | rc:2 | did:8 | sid:8 | al:8 | 0]
@@ -354,7 +355,12 @@ module noc_intf(
 					RD_RSP: resp_next_state = R_R0;
 					MG_RSP: resp_next_state = R_M0;
 				endcase
-			R_R0     : resp_next_state = R_R1;
+			R_R0     : begin 
+//				if (wr_rcv)
+					resp_next_state = R_R1;
+//				else
+//					resp_next_state = R_IDLE;
+			end
 			R_R1     : resp_next_state = R_R2;
 			R_R2     : resp_next_state = R_R3;
 			R_R3     : resp_next_state = R_R4_DATA;
@@ -397,7 +403,12 @@ module noc_intf(
 				R_W2: noc_from_dev_data <= #1 fifo_out[23:16];              // S ID
 				R_W3: noc_from_dev_data <= #1 fifo_out[15:8];               // Actual Length
 				// READ RESPONSE
-				R_R0: noc_from_dev_data <= #1 {fifo_out[33:32], 6'b000011};
+				R_R0: begin
+//					if (wr_rcv)
+						noc_from_dev_data <= #1 {fifo_out[33:32], 6'b000011};
+//					else
+//						noc_from_dev_data <= #1 8'bx;
+				end
 				R_R1: noc_from_dev_data <= #1 fifo_out[31:24];
 				R_R2: noc_from_dev_data <= #1 fifo_out[23:16];
 				R_R3: noc_from_dev_data <= #1 fifo_out[15:8];
@@ -449,7 +460,7 @@ module noc_intf(
 
 	always_ff @ (posedge clk or posedge rst) begin
 		if (rst)
-			dout_r <= #1 0;
+			dout_r <= #1 64'bx;
 		else begin
 			if (pushout && !stopout)
 				dout_r <= #1 dout;
@@ -468,4 +479,15 @@ module noc_intf(
 		end
 	end
 
+/*	always_ff @ (posedge clk or posedge rst) begin
+		if (rst)
+			wr_rcv <= #1 0;
+		else begin
+			if (get_curr_state == G_W0)
+				wr_rcv <= #1 wr_rcv + 1;
+			else if (resp_curr_state == R_R3)
+				wr_rcv <= #1 wr_rcv - 1;
+		end
+	end
+*/
 endmodule

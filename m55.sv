@@ -12,7 +12,8 @@ module m55(input clk, input rst, input reg [2:0] rx,input reg [2:0] ry, output r
     end
     always @(posedge(clk) or posedge(rst)) begin
         if(rst) begin
-            mdata <= 64'hdeaddeaddeaddead;
+//            mdata <= 64'hdeaddeaddeaddead;
+            mdata <= 64'hx;
         end else begin
             if(wr) begin
                 mdata[wy][wx]<=#1 wd;
