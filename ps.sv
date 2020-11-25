@@ -137,6 +137,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 	logic [3:0] pfifo_req; // Request list
 	logic [3:0] pfifo_grt; // Grant list
 	logic [7:0] p2n_cnt; // Command counter for p2n FIFO
+	logic lock_grt; // Lock the arbitor when a device is operating
 	assign p2n_fifo1_in = {s2p_1.noc_from_dev_ctl, s2p_1.noc_from_dev_data};
 	assign p2n_fifo2_in = {s2p_2.noc_from_dev_ctl, s2p_2.noc_from_dev_data};
 	assign p2n_fifo3_in = {s2p_3.noc_from_dev_ctl, s2p_3.noc_from_dev_data};
@@ -146,12 +147,14 @@ module ps (NOCI.TI t, NOCI.FO f);
 	p2n_fifo p2n_fifo3 (.clk(t.clk), .rst(t.reset), .data_in(p2n_fifo3_in), .rd_en(p2n_fifo3_en_r), .wr_en(p2n_fifo3_en_w), .data_out(p2n_fifo3_out), .empty(p2n_fifo3_empty), .full(p2n_fifo3_full));
 	p2n_fifo p2n_fifo4 (.clk(t.clk), .rst(t.reset), .data_in(p2n_fifo4_in), .rd_en(p2n_fifo4_en_r), .wr_en(p2n_fifo4_en_w), .data_out(p2n_fifo4_out), .empty(p2n_fifo4_empty), .full(p2n_fifo4_full));
 	// Arbitrator for input from 4 perm devices
-	arb arb(.clk(t.clk), .reset(t.reset), .req(pfifo_req), .grant(pfifo_grt));
+	arb arb(.clk(t.clk), .reset(t.reset), .req(pfifo_req), .grant(pfifo_grt), .lock(lock_grt));
 
 	assign p2n_fifo1_en_r = pfifo_grt[0] && (!p2n_fifo1_empty);
 	assign p2n_fifo2_en_r = pfifo_grt[1] && (!p2n_fifo2_empty);
 	assign p2n_fifo3_en_r = pfifo_grt[2] && (!p2n_fifo3_empty);
 	assign p2n_fifo4_en_r = pfifo_grt[3] && (!p2n_fifo4_empty);
+
+	assign lock_grt = ~(s2p_1.noc_from_dev_ctl && s2p_2.noc_from_dev_ctl && s2p_3.noc_from_dev_ctl && s2p_4.noc_from_dev_ctl);
 
 	always_comb begin
 		case (pfifo_grt)

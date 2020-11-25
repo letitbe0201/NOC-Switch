@@ -1,8 +1,7 @@
 // An arbitration module 
 // This one does priority arbitration
 
-module arb(input reg clk, input reg reset, input reg [3:0] req,
-	output reg[3:0] grant);
+module arb (input reg clk, input reg reset, input reg [3:0] req, output reg[3:0] grant, input reg lock);
 reg [3:0] int_grant,int_grant_d;
 reg [1:0] last,last_d;
 reg [7:0] pri_in;
