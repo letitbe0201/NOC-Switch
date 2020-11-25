@@ -38,8 +38,10 @@ always @(posedge(clk) or posedge(reset)) begin
 		int_grant <= 0;
 		last<=0;
 	end else begin
-		int_grant <= #1 int_grant_d;
-		last<= #1 last_d;
+		if (!lock) begin
+			int_grant <= #1 int_grant_d;
+			last<= #1 last_d;
+		end
 	end
 end	
 	

@@ -154,7 +154,18 @@ module ps (NOCI.TI t, NOCI.FO f);
 	assign p2n_fifo3_en_r = pfifo_grt[2] && (!p2n_fifo3_empty);
 	assign p2n_fifo4_en_r = pfifo_grt[3] && (!p2n_fifo4_empty);
 
-	assign lock_grt = ~(s2p_1.noc_from_dev_ctl && s2p_2.noc_from_dev_ctl && s2p_3.noc_from_dev_ctl && s2p_4.noc_from_dev_ctl);
+//	assign lock_grt = ~(s2p_1.noc_from_dev_ctl && s2p_2.noc_from_dev_ctl && s2p_3.noc_from_dev_ctl && s2p_4.noc_from_dev_ctl);
+
+	always_ff @ (posedge t.clk or posedge t.reset) begin
+		if (t.reset)
+			lock_grt <= #1 1;
+		else begin
+			if (s2p_1.noc_from_dev_ctl && s2p_2.noc_from_dev_ctl && s2p_3.noc_from_dev_ctl && s2p_4.noc_from_dev_ctl)
+				lock_grt <= #1 0;
+			else
+				lock_grt <= #1 1;
+		end
+	end	
 
 	always_comb begin
 		case (pfifo_grt)
@@ -274,8 +285,13 @@ module ps (NOCI.TI t, NOCI.FO f);
 					endcase
 				end
 				else begin
+					case (pfifo_grt)
+						4'b0001: pfifo_req[0] <= #1 0;
+						4'b0010: pfifo_req[1] <= #1 0;
+						4'b0100: pfifo_req[2] <= #1 0;
+						4'b1000: pfifo_req[3] <= #1 0;
+					endcase
 					p2n_cnt <= #1 0;
-					pfifo_req <= #1 0;
 				end
 			end
 		end
