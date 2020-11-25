@@ -136,7 +136,14 @@ module ps (NOCI.TI t, NOCI.FO f);
 	logic [8:0] p2n_fifo1_in, p2n_fifo2_in, p2n_fifo3_in, p2n_fifo4_in;
 	logic [3:0] pfifo_req; // Request list
 	logic [3:0] pfifo_grt; // Grant list
-	logic [7:0] p2n_cnt; // Command counter for p2n FIFO
+	logic [7:0] p2n_cnt_1; // Command counter for p2n FIFO
+	logic [7:0] p2n_cnt_2;
+	logic [7:0] p2n_cnt_3;
+	logic [7:0] p2n_cnt_4;
+	logic [2:0] al_cnt_1; // Count the 4th noc_from_dev_data for read responses
+	logic [2:0] al_cnt_2;
+	logic [2:0] al_cnt_3;
+	logic [2:0] al_cnt_4;
 	logic lock_grt; // Lock the arbitor when a device is operating
 	assign p2n_fifo1_in = {s2p_1.noc_from_dev_ctl, s2p_1.noc_from_dev_data};
 	assign p2n_fifo2_in = {s2p_2.noc_from_dev_ctl, s2p_2.noc_from_dev_data};
@@ -154,9 +161,9 @@ module ps (NOCI.TI t, NOCI.FO f);
 	assign p2n_fifo3_en_r = pfifo_grt[2] && (!p2n_fifo3_empty);
 	assign p2n_fifo4_en_r = pfifo_grt[3] && (!p2n_fifo4_empty);
 
-//	assign lock_grt = ~(s2p_1.noc_from_dev_ctl && s2p_2.noc_from_dev_ctl && s2p_3.noc_from_dev_ctl && s2p_4.noc_from_dev_ctl);
+	assign lock_grt = ~f.noc_from_dev_ctl;
 
-	always_ff @ (posedge t.clk or posedge t.reset) begin
+/*	always_ff @ (posedge t.clk or posedge t.reset) begin
 		if (t.reset)
 			lock_grt <= #1 1;
 		else begin
@@ -166,7 +173,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 				lock_grt <= #1 1;
 		end
 	end	
-
+*/
 	always_comb begin
 		case (pfifo_grt)
 			4'b0001: begin
@@ -200,24 +207,85 @@ module ps (NOCI.TI t, NOCI.FO f);
 	always_ff @ (posedge t.clk or posedge t.reset) begin
 		if (t.reset) begin
 			pfifo_req <= #1 0;
-			p2n_cnt <= #1 0;
+			p2n_cnt_1 <= #1 0;
+			p2n_cnt_2 <= #1 0;
+			p2n_cnt_3 <= #1 0;
+			p2n_cnt_4 <= #1 0;
+			al_cnt_1 <= #1 0;
+			al_cnt_2 <= #1 0;
+			al_cnt_3 <= #1 0;
+			al_cnt_4 <= #1 0;
 			rcv_rsp <= #1 NONE_RSP;
 		end
 		else begin
+			case (pfifo_grt)
+				4'b0001: begin
+					if (p2n_cnt_1 > 1)
+						p2n_cnt_1 <= #1 p2n_cnt_1 - 1;
+					else if (p2n_cnt_1 == 1) begin
+						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
+							p2n_cnt_1 <= #1 s2p_1.noc_from_dev_data + 2;
+						else begin
+							p2n_cnt_1 <= #1 0;
+						end
+					end
+					else
+						pfifo_req[0] <= #1 0;
+				end
+				4'b0010: begin
+					if (p2n_cnt_2 > 1)
+						p2n_cnt_2 <= #1 p2n_cnt_2 - 1;
+					else if (p2n_cnt_2 == 1) begin
+						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
+							p2n_cnt_2 <= #1 s2p_2.noc_from_dev_data + 2;
+						else begin
+							p2n_cnt_2 <= #1 0;
+						end
+					end
+					else
+						pfifo_req[1] <= #1 0;
+				end
+				4'b0100: begin
+					if (p2n_cnt_3 > 1)
+						p2n_cnt_3 <= #1 p2n_cnt_3 - 1;
+					else if (p2n_cnt_3 == 1) begin
+						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
+							p2n_cnt_3 <= #1 s2p_3.noc_from_dev_data + 2;
+						else begin
+							p2n_cnt_3 <= #1 0;
+						end
+					end
+					else
+						pfifo_req[2] <= #1 0;
+				end
+				4'b1000: begin
+					if (p2n_cnt_4 > 1)
+						p2n_cnt_4 <= #1 p2n_cnt_4 - 1;
+					else if (p2n_cnt_4 == 1) begin
+						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
+							p2n_cnt_4 <= #1 s2p_4.noc_from_dev_data + 2;
+						else begin
+							p2n_cnt_4 <= #1 0;
+						end
+					end
+					else
+						pfifo_req[3] <= #1 0;
+				end
+			endcase
 			if (s2p_1.noc_from_dev_ctl && (s2p_1.noc_from_dev_data!=0)) begin
 				pfifo_req[0] <= #1 1;
 				case (s2p_1.noc_from_dev_data[2:0])
 					3'b011: begin
 						rcv_rsp <= #1 RD_RSP;
-						p2n_cnt <= #1 3;
+						p2n_cnt_1 <= #1 2;
 					end
 					3'b100: begin
 						rcv_rsp <= #1 WR_RSP;
-						p2n_cnt <= #1 5;
+						p2n_cnt_1 <= #1 5;
 					end
 					3'b101: begin
 						rcv_rsp <= #1 MG_RSP;
-						p2n_cnt <= #1 6;
+						p2n_cnt_1 <= #1 6;
 					end
 				endcase
 			end
@@ -226,15 +294,15 @@ module ps (NOCI.TI t, NOCI.FO f);
 				case (s2p_2.noc_from_dev_data[2:0])
 					3'b011: begin
 						rcv_rsp <= #1 RD_RSP;
-						p2n_cnt <= #1 3;
+						p2n_cnt_2 <= #1 2;
 					end
 					3'b100: begin
 						rcv_rsp <= #1 WR_RSP;
-						p2n_cnt <= #1 5;
+						p2n_cnt_2 <= #1 5;
 					end
 					3'b101: begin
 						rcv_rsp <= #1 MG_RSP;
-						p2n_cnt <= #1 6;
+						p2n_cnt_2 <= #1 6;
 					end
 				endcase
 			end
@@ -243,15 +311,15 @@ module ps (NOCI.TI t, NOCI.FO f);
 				case (s2p_3.noc_from_dev_data[2:0])
 					3'b011: begin
 						rcv_rsp <= #1 RD_RSP;
-						p2n_cnt <= #1 3;
+						p2n_cnt_3 <= #1 2;
 					end
 					3'b100: begin
 						rcv_rsp <= #1 WR_RSP;
-						p2n_cnt <= #1 5;
+						p2n_cnt_3 <= #1 5;
 					end
 					3'b101: begin
 						rcv_rsp <= #1 MG_RSP;
-						p2n_cnt <= #1 6;
+						p2n_cnt_3 <= #1 6;
 					end
 				endcase
 			end
@@ -260,39 +328,17 @@ module ps (NOCI.TI t, NOCI.FO f);
 				case (s2p_4.noc_from_dev_data[2:0])
 					3'b011: begin
 						rcv_rsp <= #1 RD_RSP;
-						p2n_cnt <= #1 3;
+						p2n_cnt_4 <= #1 2;
 					end
 					3'b100: begin
 						rcv_rsp <= #1 WR_RSP;
-						p2n_cnt <= #1 5;
+						p2n_cnt_4 <= #1 5;
 					end
 					3'b101: begin
 						rcv_rsp <= #1 MG_RSP;
-						p2n_cnt <= #1 6;
+						p2n_cnt_4 <= #1 6;
 					end
 				endcase
-			end
-			if (p2n_cnt > 1)
-				p2n_cnt <= #1 p2n_cnt - 1;
-			else if (p2n_cnt == 1) begin
-				if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl)) begin
-					case (pfifo_grt)
-						4'b0001: p2n_cnt <= #1 s2p_1.noc_from_dev_data + 2;
-						4'b0010: p2n_cnt <= #1 s2p_2.noc_from_dev_data + 2;
-						4'b0100: p2n_cnt <= #1 s2p_3.noc_from_dev_data + 2;
-						4'b1000: p2n_cnt <= #1 s2p_4.noc_from_dev_data + 2;
-						default: $display("ERROR AT RESPONSE COMMAND COUNTING");
-					endcase
-				end
-				else begin
-					case (pfifo_grt)
-						4'b0001: pfifo_req[0] <= #1 0;
-						4'b0010: pfifo_req[1] <= #1 0;
-						4'b0100: pfifo_req[2] <= #1 0;
-						4'b1000: pfifo_req[3] <= #1 0;
-					endcase
-					p2n_cnt <= #1 0;
-				end
 			end
 		end
 	end
