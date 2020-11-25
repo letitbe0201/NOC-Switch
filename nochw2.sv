@@ -42,7 +42,7 @@ module noc_intf(
 	logic get_last_data;
 	logic [2:0] intf_perm_index; // Index for writing to the perm (0-7)
 	logic [4:0] perm_index; // Index for 25 set (0-24) of 64-bit data
-	
+	logic pushout_err, stopin_err, addr_err;
 
 	// Response to read/write command
 	enum [3:0] {
@@ -68,7 +68,9 @@ module noc_intf(
 		NOP,
 		WR_RSP,
 		RD_RSP,
-		MG_RSP
+		MG_RSP,
+		PS_ERR,
+		ST_ERR
 	} send_rsp;
 
 	logic partial_wr;
@@ -84,7 +86,6 @@ module noc_intf(
 	logic wr_en;
 	logic fifo_empty;
 	logic rd_fifo;
-//	logic [3:0] wr_rcv; // Rise if a Write command received. Fall if the output is read
 
 	// WR (30-bit) [cmd:3 | rc:2 | did:8 | sid:8 | al:8 | 0]
 	// RD (30-bit) [cmd:3 | rc:2 | did:8 | sid:8 | al:8 | 0]
@@ -116,6 +117,18 @@ module noc_intf(
 		.edge_detected(rising_pushout)
 	);
 
+	always_ff @ (posedge clk or posedge rst) begin
+		if (rst) begin
+			pushout_err <= #1 0;
+			stopin_err <= #1 0;
+		end
+		else begin
+			if (noc_to_dev_ctl && noc_to_dev_data[2:0]==1 && get_curr_state==G_IDLE && ~pushout)
+				pushout_err <= #1 1;
+			if (noc_to_dev_ctl && noc_to_dev_data[2:0]==2 && get_curr_state==G_IDLE && stopin)
+				stopin_err <= #1 1;
+		end
+	end
 
 	always_ff @ (posedge clk or posedge rst) begin
 		if (rst)
@@ -292,8 +305,14 @@ module noc_intf(
 		else if (((!get_last_data)^(get_last_addr&&(get_curr_state==G_R3))^falling_stopin^rising_pushout) && (get_last_data&&(get_last_addr&&(get_curr_state==G_R3))&&falling_stopin&&rising_pushout))
 			$display("\nERROR: Request a falling stopin message and write response at the same time\n");
 		else if (get_last_addr&&(get_curr_state==G_R3)) begin
-			fifo_in[36:34] <= #1 RD_RSP;
-			fifo_in[33:32] <= #1 (partial_rd) ? 2'b10 : 2'b00 ; // RC, without write error
+			if (pushout_err) begin
+				fifo_in[36:34] <= #1 PS_ERR;
+				fifo_in[33:32] <= #1 2'b01;
+			end
+			else begin
+				fifo_in[36:34] <= #1 RD_RSP;
+				fifo_in[33:32] <= #1 (partial_rd) ? 2'b10 : 2'b00 ; // RC, without write error
+			end
 			fifo_in[31:24] <= #1 D_id;
 			fifo_in[23:16] <= #1 S_id;
 			fifo_in[15:8] <= #1 (partial_rd) ? (200-actual_Dlen_rsp) : exp_Dlen;
@@ -314,8 +333,14 @@ module noc_intf(
 			fifo_in[7:0] <= #1 8'h12;
 		end
 		else if (get_last_data) begin // Write Response to FIFO triggered by get_last_data
-			fifo_in[36:34] <= #1 WR_RSP;
-			fifo_in[33:32] <= #1 (partial_wr) ? 2'b10 : 2'b00 ; // RC, without write error
+			if (stopin_err) begin
+				fifo_in[36:34] <= #1 ST_ERR;
+				fifo_in[33:32] <= #1 2'b01;
+			end
+			else begin
+				fifo_in[36:34] <= #1 WR_RSP;
+				fifo_in[33:32] <= #1 (partial_wr) ? 2'b10 : 2'b00 ; // RC, without write error
+			end
 			fifo_in[31:24] <= #1 D_id;
 			fifo_in[23:16] <= #1 S_id;
 			fifo_in[15:8] <= #1 (partial_wr) ? (200-(Dl_cnt+1-exp_Dlen)) : exp_Dlen;
@@ -354,13 +379,10 @@ module noc_intf(
 					WR_RSP: resp_next_state = R_W0;
 					RD_RSP: resp_next_state = R_R0;
 					MG_RSP: resp_next_state = R_M0;
+					PS_ERR: resp_next_state = R_R0;
+					ST_ERR: resp_next_state = R_W0;
 				endcase
-			R_R0     : begin 
-//				if (wr_rcv)
-					resp_next_state = R_R1;
-//				else
-//					resp_next_state = R_IDLE;
-			end
+			R_R0     : resp_next_state = R_R1;
 			R_R1     : resp_next_state = R_R2;
 			R_R2     : resp_next_state = R_R3;
 			R_R3     : resp_next_state = R_R4_DATA;
@@ -399,18 +421,13 @@ module noc_intf(
 			case (resp_curr_state)
 				// WRITE RESPONSE
 				R_W0: noc_from_dev_data <= #1 {fifo_out[33:32], 6'b000100}; // RC
-				R_W1: noc_from_dev_data <= #1 fifo_out[31:24];              // D ID
-				R_W2: noc_from_dev_data <= #1 fifo_out[23:16];              // S ID
+				R_W1: noc_from_dev_data <= #1 fifo_out[23:16];              // S ID
+				R_W2: noc_from_dev_data <= #1 fifo_out[31:24];              // D ID
 				R_W3: noc_from_dev_data <= #1 fifo_out[15:8];               // Actual Length
 				// READ RESPONSE
-				R_R0: begin
-//					if (wr_rcv)
-						noc_from_dev_data <= #1 {fifo_out[33:32], 6'b000011};
-//					else
-//						noc_from_dev_data <= #1 8'bx;
-				end
-				R_R1: noc_from_dev_data <= #1 fifo_out[31:24];
-				R_R2: noc_from_dev_data <= #1 fifo_out[23:16];
+				R_R0: noc_from_dev_data <= #1 {fifo_out[33:32], 6'b000011};
+				R_R1: noc_from_dev_data <= #1 fifo_out[23:16];
+				R_R2: noc_from_dev_data <= #1 fifo_out[31:24];
 				R_R3: noc_from_dev_data <= #1 fifo_out[15:8];
 				R_R4_DATA:
 					case (Dl_cnt_rsp[2:0])
@@ -425,8 +442,8 @@ module noc_intf(
 					endcase
 				// MESSAGE
 				R_M0: noc_from_dev_data <= #1 8'b00000101;
-				R_M1: noc_from_dev_data <= #1 fifo_out[31:24];
-				R_M2: noc_from_dev_data <= #1 fifo_out[23:16];
+				R_M1: noc_from_dev_data <= #1 fifo_out[23:16];
+				R_M2: noc_from_dev_data <= #1 fifo_out[31:24];
 				R_M3: noc_from_dev_data <= #1 fifo_out[15:8];
 				R_M4: noc_from_dev_data <= #1 fifo_out[7:0];
 				default: noc_from_dev_data <= #1 0;
@@ -479,15 +496,4 @@ module noc_intf(
 		end
 	end
 
-/*	always_ff @ (posedge clk or posedge rst) begin
-		if (rst)
-			wr_rcv <= #1 0;
-		else begin
-			if (get_curr_state == G_W0)
-				wr_rcv <= #1 wr_rcv + 1;
-			else if (resp_curr_state == R_R3)
-				wr_rcv <= #1 wr_rcv - 1;
-		end
-	end
-*/
 endmodule
