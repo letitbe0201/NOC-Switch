@@ -45,6 +45,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 		MG_RSP
 	} rcv_rsp; // Read/Write/Message Response
 	logic [7:0] cmd_Des; // Rd/Wr command DESTINATION
+	logic [7:0] cmd_Des_next; // Store next command DESTINATION
 	logic [9:0] cmd_cnt;
 	logic [9:0] cmd_cnt_fifo; 
 
@@ -71,25 +72,87 @@ module ps (NOCI.TI t, NOCI.FO f);
 			Alen <= #1 0;
 			Dlen <= #1 0;
 			rcv_cmd <= #1 NONE;
-			cmd_Des <= #1 0;
-			cmd_cnt <= #1 0;
 		end
 		else begin
 			if (ctl_f) begin
 				Alen <= #1 (1 << n2ps_temp[7:6]);
 				Dlen <= #1 (1 << n2ps_temp[5:3]);
-				cmd_Des <= #1 t.noc_to_dev_data;
 				if (n2ps_temp[2:0] == 3'b010) begin // Write command
 					rcv_cmd <= #1 WR_CMD;
-					cmd_cnt <= #1 (1<<n2ps_temp[7:6]) + (1<<n2ps_temp[5:3]) + 2;
 				end
 				else if (n2ps_temp[2:0] == 3'b001) begin // Read command
 					rcv_cmd <= #1 RD_CMD;
-					cmd_cnt <= #1 (1<<n2ps_temp[7:6]) + 2;
+				end
+			end
+		end
+	end
+
+	always_ff @ (posedge t.clk or posedge t.reset) begin
+		if (t.reset) begin
+			cmd_cnt <= #1 0;
+			cmd_cnt_fifo <= #1 0;
+		end
+		else begin
+			// Command count on NOC to perms
+			if (t.noc_to_dev_ctl && (t.noc_to_dev_data!=0)) begin
+				if (t.noc_to_dev_data[2:0] == 3'b010) begin
+					cmd_cnt <= #1 ((1<<t.noc_to_dev_data[7:6]) + (1<<t.noc_to_dev_data[5:3]) + 3);
+				end
+				else if (t.noc_to_dev_data[2:0] == 3'b001) begin
+					cmd_cnt <= #1 ((1<<t.noc_to_dev_data[7:6]) + 3);
 				end
 			end
 			else if (cmd_cnt)
 				cmd_cnt <= #1 cmd_cnt - 1;
+			// Command count on 4 FIFOs taking write commands
+			if (s2p_1.noc_to_dev_ctl && (s2p_1.noc_to_dev_data!=0)) begin
+				if (s2p_1.noc_to_dev_data[2:0] == 3'b010) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_1.noc_to_dev_data[7:6]) + (1<<s2p_1.noc_to_dev_data[5:3]) + 2);
+				end
+				else if (s2p_1.noc_to_dev_data[2:0] == 3'b001) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_1.noc_to_dev_data[7:6]) + 2);
+				end
+			end
+			if (s2p_2.noc_to_dev_ctl && (s2p_2.noc_to_dev_data!=0)) begin
+				if (s2p_2.noc_to_dev_data[2:0] == 3'b010) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_2.noc_to_dev_data[7:6]) + (1<<s2p_2.noc_to_dev_data[5:3]) + 2);
+				end
+				else if (s2p_2.noc_to_dev_data[2:0] == 3'b001) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_2.noc_to_dev_data[7:6]) + 2);
+				end
+			end
+			if (s2p_3.noc_to_dev_ctl && (s2p_3.noc_to_dev_data!=0)) begin
+				if (s2p_3.noc_to_dev_data[2:0] == 3'b010) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_3.noc_to_dev_data[7:6]) + (1<<s2p_3.noc_to_dev_data[5:3]) + 2);
+				end
+				else if (s2p_3.noc_to_dev_data[2:0] == 3'b001) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_3.noc_to_dev_data[7:6]) + 2);
+				end
+			end
+			if (s2p_4.noc_to_dev_ctl && (s2p_4.noc_to_dev_data!=0)) begin
+				if (s2p_4.noc_to_dev_data[2:0] == 3'b010) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_4.noc_to_dev_data[7:6]) + (1<<s2p_4.noc_to_dev_data[5:3]) + 2);
+				end
+				else if (s2p_4.noc_to_dev_data[2:0] == 3'b001) begin
+					cmd_cnt_fifo <= #1 ((1<<s2p_4.noc_to_dev_data[7:6]) + 2);
+				end
+			end
+			if (cmd_cnt_fifo)
+				cmd_cnt_fifo <= #1 cmd_cnt_fifo - 1;
+		end
+	end
+
+	always_ff @ (posedge t.clk or posedge t.reset) begin
+		if (t.reset) begin
+			cmd_Des <= #1 0;
+			cmd_Des_next <= #1 0;
+		end
+		else begin
+			if (ctl_f)
+//				cmd_Des <= #1 t.noc_to_dev_data;
+				cmd_Des_next <= #1 t.noc_to_dev_data;
+			if (cmd_Des != cmd_Des_next)
+				cmd_Des <= #1 cmd_Des_next;
 		end
 	end
 	
@@ -107,26 +170,6 @@ module ps (NOCI.TI t, NOCI.FO f);
 	// Read Enalbe of FIFO
 	assign n2p_fifo_en_r = (~n2p_fifo_empty) && (cmd_Des);
 	
-	// Cmd cnt for n2p fifo read
-	always_ff @ (posedge t.clk or posedge t.reset) begin
-		if (t.reset)
-			cmd_cnt_fifo <= #1 0;
-		else begin
-			if (ctl_f) begin
-				if (n2ps_temp[2:0] == 3'b010) begin // Write command
-					cmd_cnt_fifo <= #1 (1<<n2ps_temp[7:6]) + (1<<n2ps_temp[5:3]) + 4;
-				end
-				else if (n2ps_temp[2:0] == 3'b001) begin // Read command
-					cmd_cnt_fifo <= #1 (1<<n2ps_temp[7:6]) + 4;
-				end
-			end
-			else if (n2p_fifo_en_r && cmd_cnt_fifo)
-				cmd_cnt_fifo <= #1 cmd_cnt_fifo - 1;
-			else if (cmd_cnt_fifo == 1)
-				cmd_cnt_fifo <= #1 0;
-		end
-	end
-
 	///////////////////////////////////////
 	logic p2n_fifo1_en_r, p2n_fifo2_en_r, p2n_fifo3_en_r, p2n_fifo4_en_r;
 	logic p2n_fifo1_en_w, p2n_fifo2_en_w, p2n_fifo3_en_w, p2n_fifo4_en_w;
@@ -211,10 +254,6 @@ module ps (NOCI.TI t, NOCI.FO f);
 			p2n_cnt_2 <= #1 0;
 			p2n_cnt_3 <= #1 0;
 			p2n_cnt_4 <= #1 0;
-			al_cnt_1 <= #1 0;
-			al_cnt_2 <= #1 0;
-			al_cnt_3 <= #1 0;
-			al_cnt_4 <= #1 0;
 			rcv_rsp <= #1 NONE_RSP;
 		end
 		else begin
@@ -223,11 +262,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 					if (p2n_cnt_1 > 1)
 						p2n_cnt_1 <= #1 p2n_cnt_1 - 1;
 					else if (p2n_cnt_1 == 1) begin
-						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
-							p2n_cnt_1 <= #1 s2p_1.noc_from_dev_data + 2;
-						else begin
-							p2n_cnt_1 <= #1 0;
-						end
+						p2n_cnt_1 <= #1 0;
 					end
 					else
 						pfifo_req[0] <= #1 0;
@@ -236,11 +271,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 					if (p2n_cnt_2 > 1)
 						p2n_cnt_2 <= #1 p2n_cnt_2 - 1;
 					else if (p2n_cnt_2 == 1) begin
-						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
-							p2n_cnt_2 <= #1 s2p_2.noc_from_dev_data + 2;
-						else begin
-							p2n_cnt_2 <= #1 0;
-						end
+						p2n_cnt_2 <= #1 0;
 					end
 					else
 						pfifo_req[1] <= #1 0;
@@ -249,11 +280,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 					if (p2n_cnt_3 > 1)
 						p2n_cnt_3 <= #1 p2n_cnt_3 - 1;
 					else if (p2n_cnt_3 == 1) begin
-						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
-							p2n_cnt_3 <= #1 s2p_3.noc_from_dev_data + 2;
-						else begin
-							p2n_cnt_3 <= #1 0;
-						end
+						p2n_cnt_3 <= #1 0;
 					end
 					else
 						pfifo_req[2] <= #1 0;
@@ -262,11 +289,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 					if (p2n_cnt_4 > 1)
 						p2n_cnt_4 <= #1 p2n_cnt_4 - 1;
 					else if (p2n_cnt_4 == 1) begin
-						if ((rcv_rsp==RD_RSP) && (f.noc_from_dev_ctl))
-							p2n_cnt_4 <= #1 s2p_4.noc_from_dev_data + 2;
-						else begin
-							p2n_cnt_4 <= #1 0;
-						end
+						p2n_cnt_4 <= #1 0;
 					end
 					else
 						pfifo_req[3] <= #1 0;
@@ -340,6 +363,33 @@ module ps (NOCI.TI t, NOCI.FO f);
 					end
 				endcase
 			end
+			if (al_cnt_1 == 1) p2n_cnt_1 <= #1 s2p_1.noc_from_dev_data;
+			if (al_cnt_2 == 1) p2n_cnt_2 <= #1 s2p_2.noc_from_dev_data;
+			if (al_cnt_3 == 1) p2n_cnt_3 <= #1 s2p_3.noc_from_dev_data;
+			if (al_cnt_4 == 1) p2n_cnt_4 <= #1 s2p_4.noc_from_dev_data;
+		end
+	end
+
+	always_ff @ (posedge t.clk or posedge t.reset) begin
+		if (t.reset) begin
+			al_cnt_1 <= #1 0;
+			al_cnt_2 <= #1 0;
+			al_cnt_3 <= #1 0;
+			al_cnt_4 <= #1 0;
+		end
+		else begin
+			al_cnt_1 <= #1 (al_cnt_1) ? al_cnt_1-1 : 0;
+			al_cnt_2 <= #1 (al_cnt_2) ? al_cnt_2-1 : 0;
+			al_cnt_3 <= #1 (al_cnt_3) ? al_cnt_3-1 : 0;
+			al_cnt_4 <= #1 (al_cnt_4) ? al_cnt_4-1 : 0;
+			if (s2p_1.noc_from_dev_ctl && (s2p_1.noc_from_dev_data!=0) && (s2p_1.noc_from_dev_data[2:0]==3'b011))
+				al_cnt_1 <= #1 3; 
+			if (s2p_2.noc_from_dev_ctl && (s2p_2.noc_from_dev_data!=0) && (s2p_2.noc_from_dev_data[2:0]==3'b011))
+				al_cnt_2 <= #1 3; 
+			if (s2p_3.noc_from_dev_ctl && (s2p_3.noc_from_dev_data!=0) && (s2p_3.noc_from_dev_data[2:0]==3'b011))
+				al_cnt_3 <= #1 3; 
+			if (s2p_4.noc_from_dev_ctl && (s2p_4.noc_from_dev_data!=0) && (s2p_4.noc_from_dev_data[2:0]==3'b011))
+				al_cnt_4 <= #1 3; 
 		end
 	end
 endmodule
