@@ -63,8 +63,6 @@ module ps (NOCI.TI t, NOCI.FO f);
 	assign s2p_3.noc_to_dev_data = (cmd_Des==8'h42) ? n2p_fifo_out[7:0] : 0;
 	assign s2p_4.noc_to_dev_ctl = (cmd_Des==8'h43) ? n2p_fifo_out[8] : 1;
 	assign s2p_4.noc_to_dev_data = (cmd_Des==8'h43) ? n2p_fifo_out[7:0] : 0;
-//	assign f.noc_from_dev_ctl = s2p_1.noc_from_dev_ctl;
-//	assign f.noc_from_dev_data = s2p_1.noc_from_dev_data;
 
 	// Write/Read command
 	always_ff @ (posedge t.clk or posedge t.reset) begin
@@ -204,7 +202,7 @@ module ps (NOCI.TI t, NOCI.FO f);
 	assign p2n_fifo3_en_r = pfifo_grt[2] && (!p2n_fifo3_empty);
 	assign p2n_fifo4_en_r = pfifo_grt[3] && (!p2n_fifo4_empty);
 
-	assign lock_grt = ~f.noc_from_dev_ctl;
+	assign lock_grt = (~f.noc_from_dev_ctl) || (p2n_fifo1_en_r) || (p2n_fifo2_en_r) || (p2n_fifo3_en_r) || (p2n_fifo4_en_r);
 
 /*	always_ff @ (posedge t.clk or posedge t.reset) begin
 		if (t.reset)
