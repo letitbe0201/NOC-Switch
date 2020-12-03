@@ -1,0 +1,28 @@
+set link_library {/apps/toshiba/sjsu/synopsys/tc240c/tc240c.db_NOMIN25 /apps/synopsys/I-2013.12-SP5/libraries/syn/dw_foundation.sldb}
+set target_library {/apps/toshiba/sjsu/synopsys/tc240c/tc240c.db_NOMIN25}
+set_host_options -max_cores 4
+read_sverilog ps.sv
+current_design ps
+link
+create_clock t.clk -name t.clk -period 10
+set_propagated_clock t.clk
+set_clock_uncertainty 0.25 t.clk
+set_propagated_clock t.clk
+set_output_delay 0.5 -clock t.clk [all_outputs]
+set all_inputs_wo_rst_clk [remove_from_collection [remove_from_collection [all_inputs] [get_port t.clk]] [get_port t.reset]]
+set_driving_cell -lib_cell CND2X1 $all_inputs_wo_rst_clk
+set_input_delay 0.6 -clock t.clk $all_inputs_wo_rst_clk
+set_output_delay 0.6 -clock t.clk [all_outputs]
+set_fix_hold [ get_clocks t.clk ]
+set_output_delay 0.3 -clock t.clk [all_outputs]
+set_max_delay 23.255 -from [all_inputs] -to [all_outputs]
+compile_ultra
+create_clock t.clk -name t.clk -period 10
+
+update_timing
+report_timing -max_paths 5 > timing.txt
+report_area > area.txt
+write -hierarchy -format verilog -output ps_gates.v
+write_sdc ps.sdc
+write_sdf ps.sdf
+quit

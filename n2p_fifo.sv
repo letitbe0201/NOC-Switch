@@ -1,7 +1,7 @@
 module n2p_fifo (clk, rst, data_in, rd_en, wr_en, data_out, empty, full); 
 
 parameter DATA_WIDTH = 9;
-parameter ADDR_WIDTH = 4;
+parameter ADDR_WIDTH = 2;
 parameter RAM_DEPTH = (1 << ADDR_WIDTH);
 
 input   logic                  clk      ; // Clock input
@@ -14,11 +14,19 @@ output  logic                  empty    ; // FIFO empty
 output  logic                  full     ; // FIFO full
 
 //-----------Internal variables-------------------
+/*
 reg [ADDR_WIDTH-1:0] wr_pointer;
 reg [ADDR_WIDTH-1:0] rd_pointer;
 reg [ADDR_WIDTH :0] status_cnt;
 wire [DATA_WIDTH-1:0] data_ram;
 reg [DATA_WIDTH-1:0] fifo_mem [RAM_DEPTH-1:0];
+integer i;
+*/
+logic [ADDR_WIDTH-1:0] wr_pointer;
+logic [ADDR_WIDTH-1:0] rd_pointer;
+logic [ADDR_WIDTH :0] status_cnt;
+logic [DATA_WIDTH-1:0] data_ram;
+logic [DATA_WIDTH-1:0] fifo_mem [RAM_DEPTH-1:0];
 integer i;
 //-----------Variable assignments---------------
 assign full = (status_cnt == (RAM_DEPTH-1));

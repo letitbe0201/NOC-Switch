@@ -1,12 +1,15 @@
-//`include "m55.sv"
-//`include "perm.sv"
-//`include "nochw2.sv"
+// Comment tb_intf.sv when simulation; Include it when synthesis
+`include "tb_intf.sv"
 `include "perm_pkg.sv"
 `include "n2p_fifo.sv"
 `include "p2n_fifo.sv"
 `include "pri_rr_arb.sv"
 
 module ps (NOCI.TI t, NOCI.FO f);
+	logic clock;
+	logic reset;
+	assign clock = t.clk;
+	assign reset = t.reset;
 	// Signal from and to TB
 	wire noc_to_dev_ctl;
 	wire [7:0] noc_to_dev_data;
@@ -26,24 +29,24 @@ module ps (NOCI.TI t, NOCI.FO f);
 	perm_pkg p3(s2p_3.TI, s2p_3.FO);
 	perm_pkg p4(s2p_4.TI, s2p_4.FO);
 	 
+	////////////////////////////////////
+	// Read/Write Command 
+	////////////////////////////////////
 	logic [8:0] n2p_fifo_out;
 	logic n2p_fifo_en_w; // Write Enable for FIFO
 	logic n2p_fifo_en_r;
+	logic n2p_fifo_empty;
+	logic n2p_fifo_full;
 	logic read_en_r; // Rising edge of NOC to perm FIFO's READ enable
 	logic [8:0] n2ps_temp; 
 	logic [3:0] Alen;
 	logic [9:0] Dlen;
+	logic ctl_f;
 	enum [1:0] {
 		NONE,
 		WR_CMD,
 		RD_CMD
 	} rcv_cmd; // Read/Write Command
-	enum [1:0] {
-		NONE_RSP,
-		WR_RSP,
-		RD_RSP,
-		MG_RSP
-	} rcv_rsp; // Read/Write/Message Response
 	logic [7:0] cmd_Des; // Rd/Wr command DESTINATION
 	logic [7:0] cmd_Des_next; // Store next command DESTINATION
 	logic [9:0] cmd_cnt;
@@ -73,8 +76,8 @@ module ps (NOCI.TI t, NOCI.FO f);
 		end
 		else begin
 			if (ctl_f) begin
-				Alen <= #1 (1 << n2ps_temp[7:6]);
-				Dlen <= #1 (1 << n2ps_temp[5:3]);
+				Alen <= #1 (1'b1 << n2ps_temp[7:6]);
+				Dlen <= #1 (1'b1 << n2ps_temp[5:3]);
 				if (n2ps_temp[2:0] == 3'b010) begin // Write command
 					rcv_cmd <= #1 WR_CMD;
 				end
@@ -94,10 +97,10 @@ module ps (NOCI.TI t, NOCI.FO f);
 			// Command count on NOC to perms
 			if (t.noc_to_dev_ctl && (t.noc_to_dev_data!=0)) begin
 				if (t.noc_to_dev_data[2:0] == 3'b010) begin
-					cmd_cnt <= #1 ((1<<t.noc_to_dev_data[7:6]) + (1<<t.noc_to_dev_data[5:3]) + 3);
+					cmd_cnt <= #1 ((1'b1<<t.noc_to_dev_data[7:6]) + (1'b1<<t.noc_to_dev_data[5:3]) + 3);
 				end
 				else if (t.noc_to_dev_data[2:0] == 3'b001) begin
-					cmd_cnt <= #1 ((1<<t.noc_to_dev_data[7:6]) + 3);
+					cmd_cnt <= #1 ((1'b1<<t.noc_to_dev_data[7:6]) + 3);
 				end
 			end
 			else if (cmd_cnt)
@@ -105,34 +108,34 @@ module ps (NOCI.TI t, NOCI.FO f);
 			// Command count on 4 FIFOs taking write commands
 			if (s2p_1.noc_to_dev_ctl && (s2p_1.noc_to_dev_data!=0)) begin
 				if (s2p_1.noc_to_dev_data[2:0] == 3'b010) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_1.noc_to_dev_data[7:6]) + (1<<s2p_1.noc_to_dev_data[5:3]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_1.noc_to_dev_data[7:6]) + (1'b1<<s2p_1.noc_to_dev_data[5:3]) + 2);
 				end
 				else if (s2p_1.noc_to_dev_data[2:0] == 3'b001) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_1.noc_to_dev_data[7:6]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_1.noc_to_dev_data[7:6]) + 2);
 				end
 			end
 			if (s2p_2.noc_to_dev_ctl && (s2p_2.noc_to_dev_data!=0)) begin
 				if (s2p_2.noc_to_dev_data[2:0] == 3'b010) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_2.noc_to_dev_data[7:6]) + (1<<s2p_2.noc_to_dev_data[5:3]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_2.noc_to_dev_data[7:6]) + (1'b1<<s2p_2.noc_to_dev_data[5:3]) + 2);
 				end
 				else if (s2p_2.noc_to_dev_data[2:0] == 3'b001) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_2.noc_to_dev_data[7:6]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_2.noc_to_dev_data[7:6]) + 2);
 				end
 			end
 			if (s2p_3.noc_to_dev_ctl && (s2p_3.noc_to_dev_data!=0)) begin
 				if (s2p_3.noc_to_dev_data[2:0] == 3'b010) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_3.noc_to_dev_data[7:6]) + (1<<s2p_3.noc_to_dev_data[5:3]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_3.noc_to_dev_data[7:6]) + (1'b1<<s2p_3.noc_to_dev_data[5:3]) + 2);
 				end
 				else if (s2p_3.noc_to_dev_data[2:0] == 3'b001) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_3.noc_to_dev_data[7:6]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_3.noc_to_dev_data[7:6]) + 2);
 				end
 			end
 			if (s2p_4.noc_to_dev_ctl && (s2p_4.noc_to_dev_data!=0)) begin
 				if (s2p_4.noc_to_dev_data[2:0] == 3'b010) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_4.noc_to_dev_data[7:6]) + (1<<s2p_4.noc_to_dev_data[5:3]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_4.noc_to_dev_data[7:6]) + (1'b1<<s2p_4.noc_to_dev_data[5:3]) + 2);
 				end
 				else if (s2p_4.noc_to_dev_data[2:0] == 3'b001) begin
-					cmd_cnt_fifo <= #1 ((1<<s2p_4.noc_to_dev_data[7:6]) + 2);
+					cmd_cnt_fifo <= #1 ((1'b1<<s2p_4.noc_to_dev_data[7:6]) + 2);
 				end
 			end
 			if (cmd_cnt_fifo)
@@ -147,7 +150,6 @@ module ps (NOCI.TI t, NOCI.FO f);
 		end
 		else begin
 			if (ctl_f)
-//				cmd_Des <= #1 t.noc_to_dev_data;
 				cmd_Des_next <= #1 t.noc_to_dev_data;
 			if (cmd_Des != cmd_Des_next)
 				cmd_Des <= #1 cmd_Des_next;
@@ -168,7 +170,16 @@ module ps (NOCI.TI t, NOCI.FO f);
 	// Read Enalbe of FIFO
 	assign n2p_fifo_en_r = (~n2p_fifo_empty) && (cmd_Des);
 	
-	///////////////////////////////////////
+
+	////////////////////////////////////
+	// Read/Write Responses and messages
+	////////////////////////////////////
+	enum [1:0] {
+		NONE_RSP,
+		WR_RSP,
+		RD_RSP,
+		MG_RSP
+	} rcv_rsp; // Read/Write/Message Response
 	logic p2n_fifo1_en_r, p2n_fifo2_en_r, p2n_fifo3_en_r, p2n_fifo4_en_r;
 	logic p2n_fifo1_en_w, p2n_fifo2_en_w, p2n_fifo3_en_w, p2n_fifo4_en_w;
 	logic p2n_fifo1_empty, p2n_fifo2_empty, p2n_fifo3_empty, p2n_fifo4_empty;
@@ -186,10 +197,12 @@ module ps (NOCI.TI t, NOCI.FO f);
 	logic [2:0] al_cnt_3;
 	logic [2:0] al_cnt_4;
 	logic lock_grt; // Lock the arbitor when a device is operating
+
 	assign p2n_fifo1_in = {s2p_1.noc_from_dev_ctl, s2p_1.noc_from_dev_data};
 	assign p2n_fifo2_in = {s2p_2.noc_from_dev_ctl, s2p_2.noc_from_dev_data};
 	assign p2n_fifo3_in = {s2p_3.noc_from_dev_ctl, s2p_3.noc_from_dev_data};
 	assign p2n_fifo4_in = {s2p_4.noc_from_dev_ctl, s2p_4.noc_from_dev_data};
+
 	p2n_fifo p2n_fifo1 (.clk(t.clk), .rst(t.reset), .data_in(p2n_fifo1_in), .rd_en(p2n_fifo1_en_r), .wr_en(p2n_fifo1_en_w), .data_out(p2n_fifo1_out), .empty(p2n_fifo1_empty), .full(p2n_fifo1_full));
 	p2n_fifo p2n_fifo2 (.clk(t.clk), .rst(t.reset), .data_in(p2n_fifo2_in), .rd_en(p2n_fifo2_en_r), .wr_en(p2n_fifo2_en_w), .data_out(p2n_fifo2_out), .empty(p2n_fifo2_empty), .full(p2n_fifo2_full));
 	p2n_fifo p2n_fifo3 (.clk(t.clk), .rst(t.reset), .data_in(p2n_fifo3_in), .rd_en(p2n_fifo3_en_r), .wr_en(p2n_fifo3_en_w), .data_out(p2n_fifo3_out), .empty(p2n_fifo3_empty), .full(p2n_fifo3_full));
@@ -204,17 +217,6 @@ module ps (NOCI.TI t, NOCI.FO f);
 
 	assign lock_grt = (~f.noc_from_dev_ctl) || (p2n_fifo1_en_r) || (p2n_fifo2_en_r) || (p2n_fifo3_en_r) || (p2n_fifo4_en_r);
 
-/*	always_ff @ (posedge t.clk or posedge t.reset) begin
-		if (t.reset)
-			lock_grt <= #1 1;
-		else begin
-			if (s2p_1.noc_from_dev_ctl && s2p_2.noc_from_dev_ctl && s2p_3.noc_from_dev_ctl && s2p_4.noc_from_dev_ctl)
-				lock_grt <= #1 0;
-			else
-				lock_grt <= #1 1;
-		end
-	end	
-*/
 	always_comb begin
 		case (pfifo_grt)
 			4'b0001: begin
