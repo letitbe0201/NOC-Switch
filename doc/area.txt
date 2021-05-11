@@ -1,0 +1,30 @@
+ 
+****************************************
+Report : area
+Design : ps
+Version: K-2015.06-SP5-1
+Date   : Wed Dec  2 16:09:12 2020
+****************************************
+
+Library(s) Used:
+
+    tc240c (File: /apps/toshiba/sjsu/synopsys/tc240c/tc240c.db_NOMIN25)
+
+Number of ports:                         5110
+Number of nets:                         93914
+Number of cells:                        88824
+Number of combinational cells:          59682
+Number of sequential cells:             29121
+Number of macros/black boxes:               1
+Number of buf/inv:                       2552
+Number of references:                      87
+
+Combinational area:             144026.000000
+Buf/Inv area:                     2619.500000
+Noncombinational area:          143770.000000
+Macro/Black Box area:                3.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:                287799.000000
+Total area:                 undefined
+1

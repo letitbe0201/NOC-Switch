@@ -1,0 +1,312 @@
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 5
+Design : ps
+Version: K-2015.06-SP5-1
+Date   : Wed Dec  2 16:09:12 2020
+****************************************
+
+ # A fanout number of 1000 was used for high fanout net computations.
+
+Operating Conditions: NOMIN25   Library: tc240c
+Wire Load Model Mode: top
+
+  Startpoint: p1/p1/cs_reg[1]
+              (rising edge-triggered flip-flop clocked by t.clk)
+  Endpoint: p1/m1/mdata_reg[0][0][48]
+            (rising edge-triggered flip-flop clocked by t.clk)
+  Path Group: t.clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock t.clk (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  p1/p1/cs_reg[1]/CP (CFD2QXL)                            0.00 #     0.00 r
+  p1/p1/cs_reg[1]/Q (CFD2QXL)                             0.43       0.43 r
+  p1/p1/U1730/Z (CIVX1)                                   0.09       0.53 f
+  p1/p1/U1720/Z (CNR2X1)                                  0.14       0.66 r
+  p1/p1/U70/Z (CND3XL)                                    0.21       0.87 f
+  p1/p1/U72/Z0 (CIVDX1)                                   0.22       1.09 r
+  p1/p1/U71/Z (CNR2X1)                                    0.21       1.30 f
+  p1/p1/U1657/Z (CNR2X2)                                  1.01       2.32 r
+  p1/p1/m3ry[0] (perm_blk_3)                              0.00       2.32 r
+  p1/m3/ry[0] (m55_13)                                    0.00       2.32 r
+  p1/m3/U27/Z (CNIVX4)                                    1.36       3.67 r
+  p1/m3/U26/Z (CNIVX1)                                    1.19       4.87 r
+  p1/m3/U2537/Z (CMX4XL)                                  0.49       5.36 f
+  p1/m3/U385/Z (CMX2XL)                                   0.20       5.56 f
+  p1/m3/U2250/Z (CANR2XL)                                 0.14       5.70 r
+  p1/m3/U43/Z (CND3XL)                                    0.33       6.03 f
+  p1/m3/rd[12] (m55_13)                                   0.00       6.03 f
+  p1/p1/m3rd[12] (perm_blk_3)                             0.00       6.03 f
+  p1/p1/U1517/Z (CIVX1)                                   0.09       6.13 r
+  p1/p1/U170/Z (CNR2XL)                                   0.09       6.22 f
+  p1/p1/U957/Z (COAN1XL)                                  0.17       6.39 f
+  p1/p1/U735/Z (CANR4CXL)                                 0.23       6.62 r
+  p1/p1/U450/Z (COND3XL)                                  0.20       6.82 f
+  p1/p1/U2216/Z (CNR4X1)                                  0.21       7.03 r
+  p1/p1/U369/Z (COND2XL)                                  0.13       7.16 f
+  p1/p1/U339/Z (CANR3XL)                                  0.22       7.38 r
+  p1/p1/U331/Z (COND4CXL)                                 0.70       8.08 f
+  p1/p1/U2217/Z (CANR1XL)                                 0.19       8.27 r
+  p1/p1/U17/Z (COND1XL)                                   0.48       8.75 f
+  p1/p1/m1wd[48] (perm_blk_3)                             0.00       8.75 f
+  p1/m1/wd[48] (m55_15)                                   0.00       8.75 f
+  p1/m1/U1734/Z (CMX2XL)                                  0.24       9.00 f
+  p1/m1/mdata_reg[0][0][48]/D (CFD1QXL)                   0.00       9.00 f
+  data arrival time                                                  9.00
+
+  clock t.clk (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  clock uncertainty                                      -0.25       9.75
+  p1/m1/mdata_reg[0][0][48]/CP (CFD1QXL)                  0.00       9.75 r
+  library setup time                                     -0.27       9.48
+  data required time                                                 9.48
+  --------------------------------------------------------------------------
+  data required time                                                 9.48
+  data arrival time                                                 -9.00
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.49
+
+
+  Startpoint: p2/p1/cs_reg[1]
+              (rising edge-triggered flip-flop clocked by t.clk)
+  Endpoint: p2/m1/mdata_reg[0][0][48]
+            (rising edge-triggered flip-flop clocked by t.clk)
+  Path Group: t.clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock t.clk (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  p2/p1/cs_reg[1]/CP (CFD2QXL)                            0.00 #     0.00 r
+  p2/p1/cs_reg[1]/Q (CFD2QXL)                             0.43       0.43 r
+  p2/p1/U1731/Z (CIVX1)                                   0.09       0.53 f
+  p2/p1/U1719/Z (CNR2X1)                                  0.12       0.65 r
+  p2/p1/U71/Z (CND3XL)                                    0.20       0.85 f
+  p2/p1/U73/Z0 (CIVDX1)                                   0.22       1.07 r
+  p2/p1/U72/Z (CNR2X1)                                    0.21       1.28 f
+  p2/p1/U1651/Z (CNR2X2)                                  1.01       2.30 r
+  p2/p1/m3ry[0] (perm_blk_2)                              0.00       2.30 r
+  p2/m3/ry[0] (m55_9)                                     0.00       2.30 r
+  p2/m3/U27/Z (CNIVX4)                                    1.36       3.65 r
+  p2/m3/U26/Z (CNIVX1)                                    1.19       4.84 r
+  p2/m3/U2537/Z (CMX4XL)                                  0.49       5.34 f
+  p2/m3/U394/Z (CMX2XL)                                   0.20       5.54 f
+  p2/m3/U2250/Z (CANR2XL)                                 0.14       5.68 r
+  p2/m3/U39/Z (CND3XL)                                    0.33       6.01 f
+  p2/m3/rd[12] (m55_9)                                    0.00       6.01 f
+  p2/p1/m3rd[12] (perm_blk_2)                             0.00       6.01 f
+  p2/p1/U1463/Z (CIVX1)                                   0.09       6.11 r
+  p2/p1/U207/Z (CNR2XL)                                   0.09       6.20 f
+  p2/p1/U1024/Z (COAN1XL)                                 0.17       6.37 f
+  p2/p1/U795/Z (CANR4CXL)                                 0.23       6.60 r
+  p2/p1/U462/Z (COND3XL)                                  0.20       6.80 f
+  p2/p1/U2218/Z (CNR4X1)                                  0.21       7.01 r
+  p2/p1/U369/Z (COND2XL)                                  0.13       7.14 f
+  p2/p1/U337/Z (CANR3XL)                                  0.22       7.36 r
+  p2/p1/U333/Z (COND4CXL)                                 0.70       8.06 f
+  p2/p1/U2219/Z (CANR1XL)                                 0.19       8.25 r
+  p2/p1/U17/Z (COND1XL)                                   0.48       8.73 f
+  p2/p1/m1wd[48] (perm_blk_2)                             0.00       8.73 f
+  p2/m1/wd[48] (m55_11)                                   0.00       8.73 f
+  p2/m1/U1756/Z (CMX2XL)                                  0.24       8.98 f
+  p2/m1/mdata_reg[0][0][48]/D (CFD1QXL)                   0.00       8.98 f
+  data arrival time                                                  8.98
+
+  clock t.clk (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  clock uncertainty                                      -0.25       9.75
+  p2/m1/mdata_reg[0][0][48]/CP (CFD1QXL)                  0.00       9.75 r
+  library setup time                                     -0.27       9.48
+  data required time                                                 9.48
+  --------------------------------------------------------------------------
+  data required time                                                 9.48
+  data arrival time                                                 -8.98
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.51
+
+
+  Startpoint: p1/p1/cs_reg[1]
+              (rising edge-triggered flip-flop clocked by t.clk)
+  Endpoint: p1/m1/mdata_reg[0][3][48]
+            (rising edge-triggered flip-flop clocked by t.clk)
+  Path Group: t.clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock t.clk (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  p1/p1/cs_reg[1]/CP (CFD2QXL)                            0.00 #     0.00 r
+  p1/p1/cs_reg[1]/Q (CFD2QXL)                             0.43       0.43 r
+  p1/p1/U1730/Z (CIVX1)                                   0.09       0.53 f
+  p1/p1/U1720/Z (CNR2X1)                                  0.14       0.66 r
+  p1/p1/U70/Z (CND3XL)                                    0.21       0.87 f
+  p1/p1/U72/Z0 (CIVDX1)                                   0.22       1.09 r
+  p1/p1/U71/Z (CNR2X1)                                    0.21       1.30 f
+  p1/p1/U1657/Z (CNR2X2)                                  1.01       2.32 r
+  p1/p1/m3ry[0] (perm_blk_3)                              0.00       2.32 r
+  p1/m3/ry[0] (m55_13)                                    0.00       2.32 r
+  p1/m3/U27/Z (CNIVX4)                                    1.36       3.67 r
+  p1/m3/U26/Z (CNIVX1)                                    1.19       4.87 r
+  p1/m3/U2537/Z (CMX4XL)                                  0.49       5.36 f
+  p1/m3/U385/Z (CMX2XL)                                   0.20       5.56 f
+  p1/m3/U2250/Z (CANR2XL)                                 0.14       5.70 r
+  p1/m3/U43/Z (CND3XL)                                    0.33       6.03 f
+  p1/m3/rd[12] (m55_13)                                   0.00       6.03 f
+  p1/p1/m3rd[12] (perm_blk_3)                             0.00       6.03 f
+  p1/p1/U1517/Z (CIVX1)                                   0.09       6.13 r
+  p1/p1/U170/Z (CNR2XL)                                   0.09       6.22 f
+  p1/p1/U957/Z (COAN1XL)                                  0.17       6.39 f
+  p1/p1/U735/Z (CANR4CXL)                                 0.23       6.62 r
+  p1/p1/U450/Z (COND3XL)                                  0.20       6.82 f
+  p1/p1/U2216/Z (CNR4X1)                                  0.21       7.03 r
+  p1/p1/U369/Z (COND2XL)                                  0.13       7.16 f
+  p1/p1/U339/Z (CANR3XL)                                  0.22       7.38 r
+  p1/p1/U331/Z (COND4CXL)                                 0.70       8.08 f
+  p1/p1/U2217/Z (CANR1XL)                                 0.19       8.27 r
+  p1/p1/U17/Z (COND1XL)                                   0.48       8.75 f
+  p1/p1/m1wd[48] (perm_blk_3)                             0.00       8.75 f
+  p1/m1/wd[48] (m55_15)                                   0.00       8.75 f
+  p1/m1/U1658/Z (CMX2XL)                                  0.24       9.00 f
+  p1/m1/mdata_reg[0][3][48]/D (CFD2QXL)                   0.00       9.00 f
+  data arrival time                                                  9.00
+
+  clock t.clk (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  clock uncertainty                                      -0.25       9.75
+  p1/m1/mdata_reg[0][3][48]/CP (CFD2QXL)                  0.00       9.75 r
+  library setup time                                     -0.22       9.53
+  data required time                                                 9.53
+  --------------------------------------------------------------------------
+  data required time                                                 9.53
+  data arrival time                                                 -9.00
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.54
+
+
+  Startpoint: p1/p1/cs_reg[1]
+              (rising edge-triggered flip-flop clocked by t.clk)
+  Endpoint: p1/m1/mdata_reg[0][2][48]
+            (rising edge-triggered flip-flop clocked by t.clk)
+  Path Group: t.clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock t.clk (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  p1/p1/cs_reg[1]/CP (CFD2QXL)                            0.00 #     0.00 r
+  p1/p1/cs_reg[1]/Q (CFD2QXL)                             0.43       0.43 r
+  p1/p1/U1730/Z (CIVX1)                                   0.09       0.53 f
+  p1/p1/U1720/Z (CNR2X1)                                  0.14       0.66 r
+  p1/p1/U70/Z (CND3XL)                                    0.21       0.87 f
+  p1/p1/U72/Z0 (CIVDX1)                                   0.22       1.09 r
+  p1/p1/U71/Z (CNR2X1)                                    0.21       1.30 f
+  p1/p1/U1657/Z (CNR2X2)                                  1.01       2.32 r
+  p1/p1/m3ry[0] (perm_blk_3)                              0.00       2.32 r
+  p1/m3/ry[0] (m55_13)                                    0.00       2.32 r
+  p1/m3/U27/Z (CNIVX4)                                    1.36       3.67 r
+  p1/m3/U26/Z (CNIVX1)                                    1.19       4.87 r
+  p1/m3/U2537/Z (CMX4XL)                                  0.49       5.36 f
+  p1/m3/U385/Z (CMX2XL)                                   0.20       5.56 f
+  p1/m3/U2250/Z (CANR2XL)                                 0.14       5.70 r
+  p1/m3/U43/Z (CND3XL)                                    0.33       6.03 f
+  p1/m3/rd[12] (m55_13)                                   0.00       6.03 f
+  p1/p1/m3rd[12] (perm_blk_3)                             0.00       6.03 f
+  p1/p1/U1517/Z (CIVX1)                                   0.09       6.13 r
+  p1/p1/U170/Z (CNR2XL)                                   0.09       6.22 f
+  p1/p1/U957/Z (COAN1XL)                                  0.17       6.39 f
+  p1/p1/U735/Z (CANR4CXL)                                 0.23       6.62 r
+  p1/p1/U450/Z (COND3XL)                                  0.20       6.82 f
+  p1/p1/U2216/Z (CNR4X1)                                  0.21       7.03 r
+  p1/p1/U369/Z (COND2XL)                                  0.13       7.16 f
+  p1/p1/U339/Z (CANR3XL)                                  0.22       7.38 r
+  p1/p1/U331/Z (COND4CXL)                                 0.70       8.08 f
+  p1/p1/U2217/Z (CANR1XL)                                 0.19       8.27 r
+  p1/p1/U17/Z (COND1XL)                                   0.48       8.75 f
+  p1/p1/m1wd[48] (perm_blk_3)                             0.00       8.75 f
+  p1/m1/wd[48] (m55_15)                                   0.00       8.75 f
+  p1/m1/U1660/Z (CMX2XL)                                  0.24       9.00 f
+  p1/m1/mdata_reg[0][2][48]/D (CFD2QXL)                   0.00       9.00 f
+  data arrival time                                                  9.00
+
+  clock t.clk (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  clock uncertainty                                      -0.25       9.75
+  p1/m1/mdata_reg[0][2][48]/CP (CFD2QXL)                  0.00       9.75 r
+  library setup time                                     -0.22       9.53
+  data required time                                                 9.53
+  --------------------------------------------------------------------------
+  data required time                                                 9.53
+  data arrival time                                                 -9.00
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.54
+
+
+  Startpoint: p1/p1/cs_reg[1]
+              (rising edge-triggered flip-flop clocked by t.clk)
+  Endpoint: p1/m1/mdata_reg[0][1][48]
+            (rising edge-triggered flip-flop clocked by t.clk)
+  Path Group: t.clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock t.clk (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  p1/p1/cs_reg[1]/CP (CFD2QXL)                            0.00 #     0.00 r
+  p1/p1/cs_reg[1]/Q (CFD2QXL)                             0.43       0.43 r
+  p1/p1/U1730/Z (CIVX1)                                   0.09       0.53 f
+  p1/p1/U1720/Z (CNR2X1)                                  0.14       0.66 r
+  p1/p1/U70/Z (CND3XL)                                    0.21       0.87 f
+  p1/p1/U72/Z0 (CIVDX1)                                   0.22       1.09 r
+  p1/p1/U71/Z (CNR2X1)                                    0.21       1.30 f
+  p1/p1/U1657/Z (CNR2X2)                                  1.01       2.32 r
+  p1/p1/m3ry[0] (perm_blk_3)                              0.00       2.32 r
+  p1/m3/ry[0] (m55_13)                                    0.00       2.32 r
+  p1/m3/U27/Z (CNIVX4)                                    1.36       3.67 r
+  p1/m3/U26/Z (CNIVX1)                                    1.19       4.87 r
+  p1/m3/U2537/Z (CMX4XL)                                  0.49       5.36 f
+  p1/m3/U385/Z (CMX2XL)                                   0.20       5.56 f
+  p1/m3/U2250/Z (CANR2XL)                                 0.14       5.70 r
+  p1/m3/U43/Z (CND3XL)                                    0.33       6.03 f
+  p1/m3/rd[12] (m55_13)                                   0.00       6.03 f
+  p1/p1/m3rd[12] (perm_blk_3)                             0.00       6.03 f
+  p1/p1/U1517/Z (CIVX1)                                   0.09       6.13 r
+  p1/p1/U170/Z (CNR2XL)                                   0.09       6.22 f
+  p1/p1/U957/Z (COAN1XL)                                  0.17       6.39 f
+  p1/p1/U735/Z (CANR4CXL)                                 0.23       6.62 r
+  p1/p1/U450/Z (COND3XL)                                  0.20       6.82 f
+  p1/p1/U2216/Z (CNR4X1)                                  0.21       7.03 r
+  p1/p1/U369/Z (COND2XL)                                  0.13       7.16 f
+  p1/p1/U339/Z (CANR3XL)                                  0.22       7.38 r
+  p1/p1/U331/Z (COND4CXL)                                 0.70       8.08 f
+  p1/p1/U2217/Z (CANR1XL)                                 0.19       8.27 r
+  p1/p1/U17/Z (COND1XL)                                   0.48       8.75 f
+  p1/p1/m1wd[48] (perm_blk_3)                             0.00       8.75 f
+  p1/m1/wd[48] (m55_15)                                   0.00       8.75 f
+  p1/m1/U1663/Z (CMX2XL)                                  0.24       9.00 f
+  p1/m1/mdata_reg[0][1][48]/D (CFD2QXL)                   0.00       9.00 f
+  data arrival time                                                  9.00
+
+  clock t.clk (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  clock uncertainty                                      -0.25       9.75
+  p1/m1/mdata_reg[0][1][48]/CP (CFD2QXL)                  0.00       9.75 r
+  library setup time                                     -0.22       9.53
+  data required time                                                 9.53
+  --------------------------------------------------------------------------
+  data required time                                                 9.53
+  data arrival time                                                 -9.00
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.54
+
+
+1
